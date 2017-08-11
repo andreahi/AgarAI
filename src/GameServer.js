@@ -10,7 +10,7 @@ var Logger = require('./modules/Logger');
 function GameServer() {
     // Location of source files - For renaming or moving source files!
     this.srcFiles = "../src";
-    
+
     // Startup
     this.run = true;
     this.version = '1.6.1';
@@ -25,14 +25,14 @@ function GameServer() {
     this.nodesFood = [];        // Food nodes
     this.nodesEjected = [];     // Ejected nodes
     this.nodesPlayer = [];      // Player nodes
-    
+
     this.movingNodes = [];      // For move engine
     this.leaderboard = [];      // For leaderboard
     this.leaderboardType = -1;  // No type
-    
+
     var BotLoader = require('./ai/BotLoader');
     this.bots = new BotLoader(this);
-    
+
     // Main loop tick
     this.startTime = Date.now();
     this.stepDateTime = 0;
@@ -49,7 +49,7 @@ function GameServer() {
         /** LOGGING **/
         logVerbosity: 4,            // Console log level (0=NONE; 1=FATAL; 2=ERROR; 3=WARN; 4=INFO; 5=DEBUG)
         logFileVerbosity: 5,        // File log level
-        
+
         /** SERVER **/
         serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
         serverWsModule: 'ws',       // WebSocket module: 'ws' or 'uws' (install npm package before using uws)
@@ -66,7 +66,7 @@ function GameServer() {
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Update interval of server stats in seconds
         mobilePhysics: 0,           // Whether or not the server uses mobile agar.io physics
-        
+
         /** CLIENT **/
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Allows the usage of server chat. 0 = no chat, 1 = use chat.
@@ -76,7 +76,7 @@ function GameServer() {
         serverWelcome1: 'Welcome to MultiOgar-Edited!',     // First server welcome message
         serverWelcome2: '',         // Second server welcome message (optional, for info, etc)
         clientBind: '',             // Only allow connections to the server from specified client (eg: http://agar.io - http://mywebsite.com - http://more.com) [Use ' - ' to seperate different websites]
-        
+
         /** ANTI-BOT **/
         serverIpLimit: 4,           // Controls the maximum number of connections from the same IP (0 for no limit)
         serverMinionIgnoreTime: 30, // minion detection disable time on server startup [seconds]
@@ -84,11 +84,11 @@ function GameServer() {
         serverMinionInterval: 1000, // minion detection interval [milliseconds]
         serverScrambleLevel: 1,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
         playerBotGrow: 0,           // Cells greater than 625 mass cannot grow from cells under 17 mass (set to 1 to disable)
-        
+
         /** BORDER **/
         borderWidth: 14142.135623730952,  // Map border size (Vanilla value: 14142)
         borderHeight: 14142.135623730952, // Map border size (Vanilla value: 14142)
-        
+
         /** FOOD **/
         foodMinSize: 10,            // Minimum food size (vanilla 10)
         foodMaxSize: 20,            // Maximum food size (vanilla 20)
@@ -97,7 +97,7 @@ function GameServer() {
         foodSpawnAmount: 30,        // The number of food to spawn per interval
         foodMassGrow: 1,            // Enable food mass grow ?
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 40 ms)
-        
+
         /** VIRUSES **/
         virusMinSize: 100,          // Minimum virus size. (vanilla: mass = val*val/100 = 100 mass)
         virusMaxSize: 141.421356237, // Maximum virus size (vanilla: mass = val*val/100 = 200 mass)
@@ -105,7 +105,7 @@ function GameServer() {
         virusMaxAmount: 100,        // Maximum number of viruses on the map. If this number is reached, then ejected cells will pass through viruses.
         motherCellMaxMass: 0,       // Maximum amount of mass a mothercell is allowed to have (0 for no limit)
         virusVelocity: 780,         // Velocity of moving viruses (speed and distance)
-        
+
         /** EJECTED MASS **/
         ejectSize: 36.06,           // vanilla: mass = val*val/100 = 13 mass?
         ejectSizeLoss: 42.43,       // Eject size which will be substracted from player cell (vanilla: mass = val*val/100 = 18 mass?)
@@ -113,7 +113,7 @@ function GameServer() {
         ejectSpawnPercent: 0.5,     // Chance for a player to spawn from ejected mass. 0.5 = 50% (set to 0 to disable)
         ejectVirus: 0,              // Whether or not players can eject viruses instead of mass
         ejectVelocity: 780,         // Velocity of ejecting cells (speed and distance)
-        
+
         /** PLAYERS **/
         playerMinSize: 31.6227766017, // Minimum size a player cell can decay too. (vanilla: val*val/100 = 10 mass)
         playerMaxSize: 1500,        // Maximum size a player cell can achive before auto-splitting. (vanilla: mass = val*val/100 = 22500 mass)
@@ -128,7 +128,7 @@ function GameServer() {
         playerDisconnectTime: -1,   // Time in seconds before a disconnected player's cell is removed (Set to -1 to never remove)
         playerMaxNickLength: 15,    // Maximum nick length
         splitVelocity: 780,         // Velocity of splitting cells (speed and distance)
-        
+
         /** MINIONS **/
         minionStartSize: 31.6227766017,    // Start size of minions (mass = 32*32/100 = 10.24)
         minionMaxStartSize: 31.6227766017, // Maximum value of random start size for minions (set value higher than minionStartSize to enable)
@@ -152,7 +152,7 @@ function GameServer() {
     this.userList = [];
     this.badWords = [];
     this.loadFiles();
-    
+
     // Set border, quad-tree
     var QuadNode = require('./modules/QuadNode.js');
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
@@ -169,15 +169,15 @@ GameServer.prototype.start = function() {
     var Gamemode = require('./gamemodes');
     this.gameMode = Gamemode.get(this.config.serverGamemode);
     this.gameMode.onServerInit(this);
-    
+
     // Client Binding
     var bind = this.config.clientBind + "";
     this.clientBind = bind.split(' - ');
-    
+
     // Start the server
     this.httpServer = http.createServer();
     var wsOptions = {
-        server: this.httpServer, 
+        server: this.httpServer,
         perMessageDeflate: false,
         maxPayload: 4096
     };
@@ -197,11 +197,11 @@ GameServer.prototype.start = function() {
 GameServer.prototype.onHttpServerOpen = function() {
     // Start Main Loop
     setTimeout(this.timerLoopBind, 1);
-    
+
     // Done
     Logger.info("Listening on port " + this.config.serverPort);
     Logger.info("Current game mode is " + this.gameMode.name);
-    
+
     // Player bots (Experimental)
     if (this.config.serverBots) {
         for (var i = 0; i < this.config.serverBots; i++)
@@ -275,15 +275,15 @@ GameServer.prototype.onClientSocketOpen = function(ws) {
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = Date.now();
     Logger.write("CONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
-    
-    
+
+
     var PlayerTracker = require('./PlayerTracker');
     ws.playerTracker = new PlayerTracker(this, ws);
     var PacketHandler = require('./PacketHandler');
     ws.packetHandler = new PacketHandler(this, ws);
     var PlayerCommand = require('./modules/PlayerCommand');
     ws.playerCommand = new PlayerCommand(this, ws.playerTracker);
-    
+
     var self = this;
     ws.on('message', function(message) {
         if (self.config.serverWsModule === "uws")
@@ -314,7 +314,7 @@ GameServer.prototype.onClientSocketOpen = function(ws) {
     });
     this.socketCount++;
     this.clients.push(ws);
-    
+
     // Check for external minions
     this.checkMinion(ws);
 };
@@ -399,13 +399,13 @@ GameServer.prototype.removeNode = function(node) {
     node.isRemoved = true;
     this.quadTree.remove(node.quadItem);
     node.quadItem = null;
-    
+
     // Remove from node lists
     var i = this.nodes.indexOf(node);
     if (i > -1) this.nodes.splice(i, 1);
     i = this.movingNodes.indexOf(node);
     if (i > -1) this.movingNodes.splice(i, 1);
-    
+
     // Special on-remove actions
     node.onRemove(this);
 };
@@ -454,11 +454,11 @@ GameServer.prototype.updateLeaderboard = function() {
     this.leaderboard = [];
     this.leaderboardType = -1;
     this.gameMode.updateLB(this, this.leaderboard);
-    
+
     if (!this.gameMode.specByLeaderboard) {
         // Get client with largest score if gamemode doesn't have a leaderboard
         var clients = this.clients.valueOf();
-        
+
         // Use sort function
         clients.sort(function(a, b) {
             return b.playerTracker._score - a.playerTracker._score;
@@ -555,7 +555,7 @@ GameServer.prototype.mainLoop = function() {
     this.stepDateTime = Date.now();
     var tStart = process.hrtime();
     var self = this;
-    
+
     // Loop main functions
     if (this.run) {
         // Move moving nodes first
@@ -680,7 +680,7 @@ GameServer.prototype.boostCell = function(cell) {
 GameServer.prototype.autoSplit = function(cell, client) {
     // get size limit based off of rec mode
     if (client.rec) var maxSize = 1e9; // increase limit for rec (1 bil)
-    else maxSize = this.config.playerMaxSize; 
+    else maxSize = this.config.playerMaxSize;
 
     // check size limit
     if (client.mergeOverride || cell._size < maxSize) return;
@@ -724,7 +724,7 @@ GameServer.prototype.checkRigidCollision = function(m) {
         return false;
     if (m.cell.owner != m.check.owner) {
         // Different owners => same team
-        return this.gameMode.haveTeams && 
+        return this.gameMode.haveTeams &&
             m.cell.owner.team == m.check.owner.team;
     }
     var r = this.config.mobilePhysics ? 1 : 13;
@@ -788,7 +788,7 @@ GameServer.prototype.splitPlayerCell = function(client, parent, angle, mass) {
     var size1 = Math.sqrt(parent.radius - size * size);
 
     // Too small to split
-    if (!size1 || size1 < this.config.playerMinSize) 
+    if (!size1 || size1 < this.config.playerMinSize)
         return;
 
     // Remove size from parent cell
@@ -920,27 +920,27 @@ GameServer.prototype.ejectMass = function(client) {
         return;
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
-        
+
         if (cell._size < this.config.playerMinEjectSize)
             continue; // Too small to eject
-        
+
         var d = client.mouse.clone().sub(cell.position);
         var sq = d.sqDist();
         d.x = sq > 1 ? d.x / sq : 1;
         d.y = sq > 1 ? d.y / sq : 0;
-        
+
         // Remove mass from parent cell first
         var loss = this.config.ejectSizeLoss;
         loss = cell.radius - loss * loss;
         cell.setSize(Math.sqrt(loss));
-        
+
         // Get starting position
         var pos = new Vec2(
             cell.position.x + d.x * cell._size,
             cell.position.y + d.y * cell._size
         );
         var angle = d.angle() + (Math.random() * .6) - .3;
-        
+
         // Create cell and add it to node list
         if (!this.config.ejectVirus) {
             var ejected = new Entity.EjectedMass(this, null, pos, this.config.ejectSize);
@@ -1071,7 +1071,7 @@ GameServer.prototype.startStatsServer = function(port) {
     // Create stats
     this.stats = "Test";
     this.getStats();
-    
+
     // Show stats
     this.httpServer = http.createServer(function(req, res) {
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1081,7 +1081,7 @@ GameServer.prototype.startStatsServer = function(port) {
     this.httpServer.on('error', function(err) {
         Logger.error("Stats Server: " + err.message);
     });
-    
+
     var getStatsBind = this.getStats.bind(this);
     this.httpServer.listen(port, function() {
         // Stats server

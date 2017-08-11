@@ -41,12 +41,21 @@ BotLoader.prototype.addBot = function () {
     var s = new FakeSocket(this.gameServer);
     s.playerTracker = new BotPlayer(this.gameServer, s);
     s.packetHandler = new PacketHandler(this.gameServer, s);
-    
+
+
     // Add to client list
     this.gameServer.clients.push(s);
     
     // Add to world
-    s.packetHandler.setNickname(this.getName());
+    var nickname = this.getName();
+    if(true || Math.random()>0.5) {
+        s.playerTracker.smart = 1
+        nickname = "*" + nickname
+    }
+
+    s.packetHandler.setNickname(nickname);
+
+
 };
 
 BotLoader.prototype.addMinion = function(owner, name) {
